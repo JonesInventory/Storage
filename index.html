@@ -551,26 +551,16 @@
                     <input type="text" id="newTitle" class="editable-field" placeholder="Enter item title" required>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="field-row">
-                        <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Category *</label>
-                        <select id="newCategory" class="editable-field" required>
-                            <option value="">Select category</option>
-                            <option value="Storage">Storage</option>
-                            <option value="Seating">Seating</option>
-                            <option value="Tables">Tables</option>
-                        </select>
-                    </div>
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Category *</label>
+                    <select id="newCategory" class="editable-field" required>
+                        <option value="">Select category</option>
+                    </select>
+                </div>
 
-                    <div class="field-row">
-                        <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Era *</label>
-                        <select id="newEra" class="editable-field" required>
-                            <option value="">Select era</option>
-                            <option value="Antique">Antique</option>
-                            <option value="Traditional">Traditional</option>
-                            <option value="Contemporary">Contemporary</option>
-                        </select>
-                    </div>
+                <div class="field-row" id="newCategoryInputRow" style="display: none;">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">New Category Name *</label>
+                    <input type="text" id="newCategoryInput" class="editable-field" placeholder="Enter new category name">
                 </div>
 
                 <div class="field-row">
@@ -1196,11 +1186,18 @@
 
         function saveNewItem() {
             const title = document.getElementById('newTitle').value.trim();
-            const category = document.getElementById('newCategory').value;
-            const era = document.getElementById('newEra').value;
+            let category = document.getElementById('newCategory').value;
             const description = document.getElementById('newDescription').value.trim();
 
-            if (!title || !category || !era || !description || !newImageData) {
+            if (category === 'add_new') {
+                category = document.getElementById('newCategoryInput').value.trim();
+                if (!category) {
+                    alert('Please enter a name for the new category');
+                    return;
+                }
+            }
+
+            if (!title || !category || !description || !newImageData) {
                 alert('Please fill in all required fields (marked with *)');
                 return;
             }
@@ -1211,7 +1208,7 @@
                 id: newId,
                 title: title,
                 category: category,
-                era: era,
+                era: 'Contemporary',
                 description: description,
                 image: newImageData,
                 priorInstallLocation: document.getElementById('newPriorLocation').value.trim(),
@@ -1230,7 +1227,8 @@
 
             document.getElementById('newTitle').value = '';
             document.getElementById('newCategory').value = '';
-            document.getElementById('newEra').value = '';
+            document.getElementById('newCategoryInput').value = '';
+            document.getElementById('newCategoryInputRow').style.display = 'none';
             document.getElementById('newDescription').value = '';
             document.getElementById('newPriorLocation').value = '';
             document.getElementById('newDimensions').value = '';
@@ -1249,7 +1247,8 @@
         function cancelAddItem() {
             document.getElementById('newTitle').value = '';
             document.getElementById('newCategory').value = '';
-            document.getElementById('newEra').value = '';
+            document.getElementById('newCategoryInput').value = '';
+            document.getElementById('newCategoryInputRow').style.display = 'none';
             document.getElementById('newDescription').value = '';
             document.getElementById('newPriorLocation').value = '';
             document.getElementById('newDimensions').value = '';
@@ -1263,11 +1262,40 @@
             filterByCategory('All');
         }
 
+        function populateCategoryDropdown() {
+            const categorySelect = document.getElementById('newCategory');
+            categorySelect.innerHTML = '<option value="">Select category</option>';
+            
+            const existingCategories = categories.filter(cat => cat !== 'All');
+            existingCategories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+            
+            const addNewOption = document.createElement('option');
+            addNewOption.value = 'add_new';
+            addNewOption.textContent = '+ Add New Category';
+            categorySelect.appendChild(addNewOption);
+        }
+
+        document.getElementById('newCategory').addEventListener('change', function(e) {
+            const inputRow = document.getElementById('newCategoryInputRow');
+            if (e.target.value === 'add_new') {
+                inputRow.style.display = 'block';
+            } else {
+                inputRow.style.display = 'none';
+                document.getElementById('newCategoryInput').value = '';
+            }
+        });
+
         function filterByCategory(category) {
             currentCategory = category;
             renderTabs();
             
             if (category === 'Add New') {
+                populateCategoryDropdown();
                 document.getElementById('gallery').style.display = 'none';
                 document.getElementById('addItemForm').style.display = 'block';
             } else {
