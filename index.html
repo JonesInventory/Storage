@@ -564,10 +564,12 @@
                 </div>
 
                 <div class="field-row">
-                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Image Upload *</label>
-                    <input type="file" id="newImage" accept="image/*" class="editable-field" style="padding: 0.5rem;" required>
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Image Upload (Multiple Files Supported) *</label>
+                    <input type="file" id="newImage" accept="image/*" class="editable-field" style="padding: 0.5rem;" required multiple>
+                    <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">💡 Select multiple images to add multiple items at once. Each image will create a new item.</p>
                     <div id="imagePreview" style="margin-top: 1rem; display: none;">
-                        <img id="previewImg" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid var(--color-border);" />
+                        <div id="previewContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;"></div>
+                        <p id="imageCount" style="color: var(--color-text-accent); font-weight: 500; margin-top: 1rem;"></p>
                     </div>
                 </div>
 
@@ -607,7 +609,7 @@
                 </div>
 
                 <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button class="save-changes-btn" onclick="saveNewItem()" style="margin-top: 0;">💾 Add Item</button>
+                    <button class="save-changes-btn" onclick="saveNewItems()" style="margin-top: 0;">💾 Add Item(s)</button>
                     <button class="export-btn secondary" onclick="cancelAddItem()" style="flex: 1; padding: 0.75rem;">✕ Cancel</button>
                 </div>
             </div>
@@ -980,7 +982,7 @@
         const categories = ['All', 'Storage', 'Seating', 'Tables'];
         let currentCategory = 'All';
         let currentZoom = 1;
-        let newImageData = null;
+        let newImageDataArray = [];
 
         function openImageModal(imageSrc) {
             const modal = document.getElementById('imageModal');
@@ -1172,19 +1174,42 @@
         }
 
         document.getElementById('newImage').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    newImageData = event.target.result;
-                    document.getElementById('previewImg').src = newImageData;
-                    document.getElementById('imagePreview').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+            const files = e.target.files;
+            if (files.length > 0) {
+                newImageDataArray = [];
+                const previewContainer = document.getElementById('previewContainer');
+                previewContainer.innerHTML = '';
+                
+                let filesProcessed = 0;
+                
+                Array.from(files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        newImageDataArray.push({
+                            data: event.target.result,
+                            name: file.name
+                        });
+                        
+                        const previewDiv = document.createElement('div');
+                        previewDiv.style.cssText = 'position: relative;';
+                        previewDiv.innerHTML = `
+                            <img src="${event.target.result}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-border);" />
+                            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--color-text-secondary); text-align: center;">${file.name}</div>
+                        `;
+                        previewContainer.appendChild(previewDiv);
+                        
+                        filesProcessed++;
+                        if (filesProcessed === files.length) {
+                            document.getElementById('imageCount').textContent = `${files.length} image(s) selected`;
+                            document.getElementById('imagePreview').style.display = 'block';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
             }
         });
 
-        function saveNewItem() {
+        function saveNewItems() {
             const title = document.getElementById('newTitle').value.trim();
             let category = document.getElementById('newCategory').value;
             const description = document.getElementById('newDescription').value.trim();
@@ -1197,29 +1222,43 @@
                 }
             }
 
-            if (!title || !category || !description || !newImageData) {
-                alert('Please fill in all required fields (marked with *)');
+            if (!category || newImageDataArray.length === 0) {
+                alert('Please select at least one image and a category');
                 return;
             }
 
-            const newId = Math.max(...items.map(i => i.id), 0) + 1;
+            const priorInstallLocation = document.getElementById('newPriorLocation').value.trim();
+            const dimensions = document.getElementById('newDimensions').value.trim();
+            const finish = document.getElementById('newFinish').value.trim();
+            const locationInWarehouse = document.getElementById('newWarehouseLocation').value.trim();
+            const additionalDetails = document.getElementById('newAdditionalDetails').value.trim();
+            const inventoryId = document.getElementById('newInventoryId').value.trim();
 
-            const newItem = {
-                id: newId,
-                title: title,
-                category: category,
-                era: 'Contemporary',
-                description: description,
-                image: newImageData,
-                priorInstallLocation: document.getElementById('newPriorLocation').value.trim(),
-                dimensions: document.getElementById('newDimensions').value.trim(),
-                finish: document.getElementById('newFinish').value.trim(),
-                locationInWarehouse: document.getElementById('newWarehouseLocation').value.trim(),
-                additionalDetails: document.getElementById('newAdditionalDetails').value.trim(),
-                inventoryId: document.getElementById('newInventoryId').value.trim()
-            };
+            let itemsAdded = 0;
+            let startId = Math.max(...items.map(i => i.id), 0) + 1;
 
-            items.push(newItem);
+            newImageDataArray.forEach((imageData, index) => {
+                const itemTitle = title || imageData.name.replace(/\.[^/.]+$/, '');
+                const itemDescription = description || `Item from ${imageData.name}`;
+
+                const newItem = {
+                    id: startId + index,
+                    title: itemTitle,
+                    category: category,
+                    era: 'Contemporary',
+                    description: itemDescription,
+                    image: imageData.data,
+                    priorInstallLocation: priorInstallLocation,
+                    dimensions: dimensions,
+                    finish: finish,
+                    locationInWarehouse: locationInWarehouse,
+                    additionalDetails: additionalDetails,
+                    inventoryId: inventoryId
+                };
+
+                items.push(newItem);
+                itemsAdded++;
+            });
 
             if (!categories.includes(category)) {
                 categories.splice(categories.length - 1, 0, category);
@@ -1238,9 +1277,9 @@
             document.getElementById('newInventoryId').value = '';
             document.getElementById('newImage').value = '';
             document.getElementById('imagePreview').style.display = 'none';
-            newImageData = null;
+            newImageDataArray = [];
 
-            alert('Item added successfully!');
+            alert(`${itemsAdded} item(s) added successfully!`);
             filterByCategory('All');
         }
 
@@ -1258,7 +1297,7 @@
             document.getElementById('newInventoryId').value = '';
             document.getElementById('newImage').value = '';
             document.getElementById('imagePreview').style.display = 'none';
-            newImageData = null;
+            newImageDataArray = [];
             filterByCategory('All');
         }
 
