@@ -738,8 +738,9 @@
                 for (let i = 1; i < lines.length; i++) {
                     if (!lines[i].trim()) continue;
                     
-                    const parts = lines[i].split(',');
-                    if (parts.length < 13) continue;
+                    const regex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+                    const parts = lines[i].split(regex);
+                    if (parts.length < 14) continue;
                     
                     const id = parseInt(parts[0]);
                     const title = parts[1].replace(/^"|"$/g, '');
@@ -752,9 +753,9 @@
                     const locationInWarehouse = parts[8].replace(/^"|"$/g, '');
                     const additionalDetails = parts[9].replace(/^"|"$/g, '');
                     const inventoryId = parts[10].replace(/^"|"$/g, '');
-                    const decision = parts[11].replace(/^"|"$/g, '');
-                    const decidedBy = parts[12].replace(/^"|"$/g, '');
-                    const imageUrl = parts[13].trim();
+                    const decision = parts[11].replace(/^"|"$/g, '').trim();
+                    const decidedBy = parts[12].replace(/^"|"$/g, '').trim();
+                    const imageUrl = parts[13].replace(/^"|"$/g, '').trim();
                     
                     const existingIndex = items.findIndex(item => item.id === id);
                     
@@ -780,10 +781,10 @@
                         newItemsAdded++;
                     }
                     
-                    if (decision) {
+                    if (decision && decision !== '') {
                         decisions[id] = {
                             decision: decision,
-                            decidedBy: decidedBy,
+                            decidedBy: decidedBy || '',
                             timestamp: new Date().toISOString()
                         };
                     }
