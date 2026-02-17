@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furniture Gallery</title>
+    <style>
+        :root {
+            --color-bg-base: #0f172a;
+            --color-bg-elevated: #020617;
+            --color-bg-surface: #1e293b;
+            --color-bg-muted: #334155;
+            --color-text-primary: #f1f5f9;
+            --color-text-secondary: #cbd5e1;
+            --color-text-muted: #94a3b8;
+            --color-text-accent: #38bdf8;
+            --color-primary: #38bdf8;
+            --color-primary-hover: #0284c7;
+            --color-border: rgba(203, 213, 225, 0.2);
+            --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --color-bg-base: #ffffff;
+                --color-bg-elevated: #f8fafc;
+                --color-bg-surface: #f1f5f9;
+                --color-bg-muted: #e2e8f0;
+                --color-text-primary: #0f172a;
+                --color-text-secondary: #475569;
+                --color-text-muted: #64748b;
+                --color-text-accent: #0284c7;
+                --color-primary: #0284c7;
+                --color-primary-hover: #0369a1;
+                --color-border: rgba(148, 163, 184, 0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-accent);
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: var(--color-bg-muted);
+            color: var(--color-text-primary);
+        }
+
+        .tab.active {
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--color-bg-surface);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+            background: var(--color-bg-muted);
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            cursor: zoom-out;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #f1f5f9;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--color-primary);
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+
+        .zoom-btn {
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text-primary);
+        }
+
+        .text-field {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--color-bg-base);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text-primary);
+            font-size: 0.9rem;
+            font-family: var(--font-family-base);
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 0.75rem;
+        }
+
+        .text-field:focus {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .card-description {
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--color-bg-muted);
+            color: var(--color-text-accent);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+        }
+
+        .action-btn:hover {
+            background: var(--color-bg-muted);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.selected {
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border-color: var(--color-primary);
+        }
+
+        .results-table {
+            margin-top: 2rem;
+            overflow-x: auto;
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-bg-surface);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .results-table th {
+            background: var(--color-bg-muted);
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .results-table td {
+            color: var(--color-text-secondary);
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .decision-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .decision-store {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .decision-donate {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .decision-consign {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .export-controls {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--color-bg-surface);
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+        }
+
+        .user-input-group {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .user-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            background: var(--color-bg-base);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text-primary);
+            font-size: 0.95rem;
+        }
+
+        .user-input:focus {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .current-user {
+            color: var(--color-text-accent);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .info-text {
+            color: var(--color-text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .export-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--color-primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .export-btn.secondary {
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .export-btn.secondary:hover {
+            background: var(--color-bg-muted);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .decision-by {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        .description-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .description-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+        }
+
+        .edit-btn {
+            padding: 0.4rem 0.75rem;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn:hover {
+            background: var(--color-bg-muted);
+        }
+
+        .save-changes-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .save-changes-btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .save-changes-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .editable-field {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--color-bg-base);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            color: var(--color-text-primary);
+            font-size: 0.9rem;
+            font-family: var(--font-family-base);
+            margin-top: 0.25rem;
+        }
+
+        .editable-field:focus {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .field-row {
+            margin-bottom: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .gallery {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .tabs {
+                gap: 0.25rem;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="imageModal" class="modal" onclick="closeModal(event)">
+        <span class="modal-close" onclick="closeModal(event)">&times;</span>
+        <img id="modalImage" class="modal-content" src="" alt="">
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="event.stopPropagation(); zoomOut()">-</button>
+            <button class="zoom-btn" onclick="event.stopPropagation(); resetZoom()">Reset</button>
+            <button class="zoom-btn" onclick="event.stopPropagation(); zoomIn()">+</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Palm Beach Storage</h1>
+        <p class="subtitle">Browse and review all items at Palm Beach Storage or select a tab to view by category. As you scroll down, you can choose what to do with it and zoom in and out by clicking on the image.</p>
+
+        <div class="user-input-group" style="margin-bottom: 2rem;">
+            <label for="userName" style="color: var(--color-text-primary); font-weight: 500;">Your Name:</label>
+            <input type="text" id="userName" class="user-input" placeholder="Enter your name" />
+            <span class="current-user" id="currentUserDisplay"></span>
+        </div>
+
+        <div class="tabs" id="tabs"></div>
+
+        <div id="addItemForm" style="display: none;">
+            <div style="max-width: 800px; margin: 0 auto; background: var(--color-bg-surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--color-border);">
+                <h2 style="color: var(--color-text-accent); margin-bottom: 1.5rem;">Add New Furniture Item</h2>
+                
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Title *</label>
+                    <input type="text" id="newTitle" class="editable-field" placeholder="Enter item title" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="field-row">
+                        <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Category *</label>
+                        <select id="newCategory" class="editable-field" required>
+                            <option value="">Select category</option>
+                            <option value="Storage">Storage</option>
+                            <option value="Seating">Seating</option>
+                            <option value="Tables">Tables</option>
+                        </select>
+                    </div>
+
+                    <div class="field-row">
+                        <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Era *</label>
+                        <select id="newEra" class="editable-field" required>
+                            <option value="">Select era</option>
+                            <option value="Antique">Antique</option>
+                            <option value="Traditional">Traditional</option>
+                            <option value="Contemporary">Contemporary</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Image Upload *</label>
+                    <input type="file" id="newImage" accept="image/*" class="editable-field" style="padding: 0.5rem;" required>
+                    <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                        <img id="previewImg" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid var(--color-border);" />
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Description *</label>
+                    <textarea id="newDescription" class="text-field" placeholder="Enter detailed description" required></textarea>
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Prior Install Location</label>
+                    <input type="text" id="newPriorLocation" class="editable-field" placeholder="Enter prior install location">
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Dimensions</label>
+                    <input type="text" id="newDimensions" class="editable-field" placeholder="Enter dimensions (e.g., 48&quot;W x 24&quot;D x 36&quot;H)">
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Finish</label>
+                    <input type="text" id="newFinish" class="editable-field" placeholder="Enter finish details">
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Location in Warehouse</label>
+                    <input type="text" id="newWarehouseLocation" class="editable-field" placeholder="Enter warehouse location">
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Additional Details</label>
+                    <input type="text" id="newAdditionalDetails" class="editable-field" placeholder="Enter additional details">
+                </div>
+
+                <div class="field-row">
+                    <label style="color: var(--color-text-primary); font-weight: 500; display: block; margin-bottom: 0.5rem;">Inventory ID</label>
+                    <input type="text" id="newInventoryId" class="editable-field" placeholder="Enter inventory ID">
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="save-changes-btn" onclick="saveNewItem()" style="margin-top: 0;">💾 Add Item</button>
+                    <button class="export-btn secondary" onclick="cancelAddItem()" style="flex: 1; padding: 0.75rem;">✕ Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="gallery" id="gallery"></div>
+
+        <div id="resultsTable"></div>
+
+        <div class="export-controls">
+            <div class="export-buttons">
+                <button class="export-btn" onclick="exportToCSV()">📥 Export to CSV</button>
+                <button class="export-btn" onclick="downloadTemplateCSV()">📄 Download Template CSV</button>
+                <label for="csvFileInput" class="export-btn secondary">📤 Import from CSV</label>
+                <input type="file" id="csvFileInput" class="file-input" accept=".csv" onchange="importFromCSV(event)" />
+            </div>
+            <p class="info-text">💡 Tip: Download the template CSV to see the correct format. Fill it with your items and import to bulk add furniture to the gallery.</p>
+        </div>
+    </div>
+
+    <script>
+        const decisions = {};
+        let currentUser = '';
+
+        const userNameInput = document.getElementById('userName');
+        const currentUserDisplay = document.getElementById('currentUserDisplay');
+
+        userNameInput.addEventListener('input', (e) => {
+            currentUser = e.target.value.trim();
+            updateCurrentUserDisplay();
+        });
+
+        function updateCurrentUserDisplay() {
+            if (currentUser) {
+                currentUserDisplay.textContent = `Logged in as: ${currentUser}`;
+            } else {
+                currentUserDisplay.textContent = '';
+            }
+        }
+
+        function downloadTemplateCSV() {
+            const headers = [
+                'ID', 'Title', 'Category', 'Era', 'Description',
+                'Prior Install Location', 'Dimensions', 'Finish',
+                'Location in Warehouse', 'Additional Details', 'Inventory ID',
+                'Decision', 'Decided By', 'Image URL'
+            ];
+
+            let csvContent = headers.join(',') + '\n';
+            
+            csvContent += '1,"Sample Furniture Item","Storage","Contemporary","Description of the item goes here","Living Room","48\\"W x 24\\"D x 36\\"H","Natural wood finish","Section A, Row 1","Additional notes about the item","INV-001","","","https://example.com/image.jpg"\n';
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'furniture-template.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToCSV() {
+            const headers = [
+                'ID', 'Title', 'Category', 'Era', 'Description',
+                'Prior Install Location', 'Dimensions', 'Finish',
+                'Location in Warehouse', 'Additional Details', 'Inventory ID',
+                'Decision', 'Decided By', 'Image URL'
+            ];
+
+            let csvContent = headers.join(',') + '\n';
+
+            items.forEach(item => {
+                const decision = decisions[item.id] || { decision: '', decidedBy: '' };
+                const row = [
+                    item.id,
+                    `"${item.title}"`,
+                    item.category,
+                    item.era,
+                    `"${item.description}"`,
+                    `"${item.priorInstallLocation || ''}"`,
+                    `"${item.dimensions || ''}"`,
+                    `"${item.finish || ''}"`,
+                    `"${item.locationInWarehouse || ''}"`,
+                    `"${item.additionalDetails || ''}"`,
+                    `"${item.inventoryId || ''}"`,
+                    `"${decision.decision || ''}"`,
+                    `"${decision.decidedBy || ''}"`,
+                    item.image
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `furniture-decisions-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            event.target.value = '';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                let newItemsAdded = 0;
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    const parts = lines[i].split(',');
+                    if (parts.length < 13) continue;
+                    
+                    const id = parseInt(parts[0]);
+                    const title = parts[1].replace(/^"|"$/g, '');
+                    const category = parts[2];
+                    const era = parts[3];
+                    const description = parts[4].replace(/^"|"$/g, '');
+                    const priorInstallLocation = parts[5].replace(/^"|"$/g, '');
+                    const dimensions = parts[6].replace(/^"|"$/g, '');
+                    const finish = parts[7].replace(/^"|"$/g, '');
+                    const locationInWarehouse = parts[8].replace(/^"|"$/g, '');
+                    const additionalDetails = parts[9].replace(/^"|"$/g, '');
+                    const inventoryId = parts[10].replace(/^"|"$/g, '');
+                    const decision = parts[11].replace(/^"|"$/g, '');
+                    const decidedBy = parts[12].replace(/^"|"$/g, '');
+                    const imageUrl = parts[13].trim();
+                    
+                    const existingIndex = items.findIndex(item => item.id === id);
+                    
+                    const itemData = {
+                        id: id,
+                        title: title,
+                        category: category,
+                        era: era,
+                        description: description,
+                        image: imageUrl,
+                        priorInstallLocation: priorInstallLocation,
+                        dimensions: dimensions,
+                        finish: finish,
+                        locationInWarehouse: locationInWarehouse,
+                        additionalDetails: additionalDetails,
+                        inventoryId: inventoryId
+                    };
+                    
+                    if (existingIndex !== -1) {
+                        items[existingIndex] = itemData;
+                    } else {
+                        items.push(itemData);
+                        newItemsAdded++;
+                    }
+                    
+                    if (decision) {
+                        decisions[id] = {
+                            decision: decision,
+                            decidedBy: decidedBy,
+                            timestamp: new Date().toISOString()
+                        };
+                    }
+                }
+                
+                const uniqueCategories = ['All', ...new Set(items.map(item => item.category))];
+                categories.length = 0;
+                categories.push(...uniqueCategories);
+                
+                renderTabs();
+                renderGallery();
+                renderResultsTable();
+                alert(`CSV imported successfully! ${newItemsAdded} new item(s) added.`);
+            };
+            reader.readAsText(file);
+        }
+
+        const items = [
+            {
+                id: 1,
+                title: "Painted Wood Chest of Drawers Circa 1750",
+                category: "Storage",
+                era: "Antique",
+                description: "Antique French commode circa 1750 with hand-painted floral decoration. Features two drawers with ornate painted urns and scrollwork on cream/gold background with coral accents. Cabriole legs with shaped apron.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/6e93f452-62ce-410d-bb55-df008effc4c3",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Hand-painted polychrome finish",
+                locationInWarehouse: "",
+                additionalDetails: "18th century antique",
+                inventoryId: ""
+            },
+            {
+                id: 11,
+                title: "White Chest of Drawers",
+                category: "Storage",
+                era: "Contemporary",
+                description: "Modern white chest with six drawers (3 rows of 2). Features chrome/nickel square knob hardware and clean contemporary lines. Raised on block feet with fluorescent light fixture mounted on top.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/904a95dd-56d9-4804-a863-bb8910958105",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "White painted finish",
+                locationInWarehouse: "",
+                additionalDetails: "Includes overhead light fixture",
+                inventoryId: ""
+            },
+            {
+                id: 12,
+                title: "Upholstered Gold and Orange Striped Chair",
+                category: "Seating",
+                era: "Traditional",
+                description: "Traditional armchair with gold, orange, and cream vertical striped upholstery. Features rolled arms, fringe trim along bottom, and turned legs. Vintage parlor style.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/5572d03f-f140-44ae-954e-a62573399143",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Striped fabric with decorative fringe",
+                locationInWarehouse: "",
+                additionalDetails: "",
+                inventoryId: ""
+            },
+            {
+                id: 13,
+                title: "Drop Leaf Table 19th Century",
+                category: "Tables",
+                era: "Antique",
+                description: "Antique 19th century drop leaf table in walnut or mahogany. Features hinged sides that fold down, turned legs with pad feet. Shows age-appropriate wear and patina.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/2ade6808-6be7-4156-86d0-a350de0a3a6e",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Natural wood with age patina",
+                locationInWarehouse: "",
+                additionalDetails: "19th century antique, functional drop leaves",
+                inventoryId: ""
+            },
+            {
+                id: 2,
+                title: "Wood Wardrobe with Geometric Doors",
+                category: "Storage",
+                era: "Traditional",
+                description: "Large oak or walnut wardrobe with two doors featuring distinctive geometric diamond panel design. Crown molding top and bronze/black hardware. Side hinged doors for hanging storage.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/03e67e80-c1ae-4f46-8380-cc0d0f4c9030",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Medium oak stain",
+                locationInWarehouse: "",
+                additionalDetails: "",
+                inventoryId: ""
+            },
+            {
+                id: 3,
+                title: "Walters Wicker Set of 4 Chairs",
+                category: "Seating",
+                era: "Contemporary",
+                description: "Set of four natural woven wicker armchairs with tufted light blue cushions. Features rolled arms and high backs with intricate basket weave pattern.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/d41afca4-2319-4169-b258-07c9c6f655c1",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Natural wicker with light blue upholstery",
+                locationInWarehouse: "",
+                additionalDetails: "Sold as set of 4",
+                inventoryId: ""
+            },
+            {
+                id: 4,
+                title: "White Pine Credenza with Cane Doors",
+                category: "Storage",
+                era: "Contemporary",
+                description: "Modern credenza with natural pine wood frame and woven cane door fronts. Four doors with brass bar pulls. Features open geometric base in two sections.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/7b17cee3-287b-45ba-a250-ed068ad91b48",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Natural light wood with cane panels",
+                locationInWarehouse: "",
+                additionalDetails: "",
+                inventoryId: ""
+            },
+            {
+                id: 5,
+                title: "Grey Upholstered Lounge Chair",
+                category: "Seating",
+                era: "Contemporary",
+                description: "Modern oversized lounge chair with light grey textured upholstery. Features wide track arms, loose back pillow cushion, and deep seat. Low profile contemporary design.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/14a69e33-58df-4892-b306-d57e6def7aae",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Light grey textured fabric",
+                locationInWarehouse: "",
+                additionalDetails: "",
+                inventoryId: ""
+            },
+            {
+                id: 6,
+                title: "Patio Renaissance Set of Four Wicker Chairs",
+                category: "Seating",
+                era: "Contemporary",
+                description: "Set of four dark brown/espresso woven wicker outdoor armchairs with bright blue cushions. Features high wingback design and curved arms. Suitable for patio or sunroom.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/e8bb0285-92d8-4318-b32d-71507748729f",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Dark brown wicker with blue cushions",
+                locationInWarehouse: "",
+                additionalDetails: "Sold as set of 4, outdoor rated",
+                inventoryId: ""
+            },
+            {
+                id: 7,
+                title: "Painted Console Cabinet",
+                category: "Storage",
+                era: "Traditional",
+                description: "Decorative painted console with turquoise/blue-green top. Features two doors with ornate gold scroll and urn motifs on cream painted panels. Two small drawers above doors. Raised on decorative base.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/08733ea8-f59a-4209-9d2b-31a9334c50a6",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Hand-painted gold and cream with turquoise top",
+                locationInWarehouse: "",
+                additionalDetails: "",
+                inventoryId: ""
+            },
+            {
+                id: 8,
+                title: "Painted Wood Blanket Chest 1771",
+                category: "Storage",
+                era: "Antique",
+                description: "Antique painted blanket chest dated 1771. Red/burgundy base with decorative painted floral panels on blue background. Features painted top border with floral motifs. Raised on ball feet.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/d7451443-facd-40ff-8990-a543efe978a2",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Hand-painted folk art finish",
+                locationInWarehouse: "",
+                additionalDetails: "Historical piece dated 1771",
+                inventoryId: ""
+            },
+            {
+                id: 9,
+                title: "Camel Colored Sofa",
+                category: "Seating",
+                era: "Contemporary",
+                description: "Traditional three-seat sofa with camel/beige textured upholstery. Features rolled arms, button-tufted back and seat cushions, and ruffled skirt. Includes three matching throw pillows.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/c37c53c0-5977-4d13-9121-ae6746ff0515",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Camel/beige textured fabric with skirted base",
+                locationInWarehouse: "",
+                additionalDetails: "",
+                inventoryId: ""
+            },
+            {
+                id: 10,
+                title: "Mongiardo Studio Pair of Selenite Bedside Tables",
+                category: "Tables",
+                era: "Contemporary",
+                description: "Designer pair of nightstands with whitewashed finish and brass trim. Features white marble top, one drawer and two-door cabinet below. Brass base plinth and hardware. Contemporary luxury design.",
+                image: "https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/bc6b54a3-42d0-4819-819f-e49d9f2f56df",
+                priorInstallLocation: "",
+                dimensions: "",
+                finish: "Whitewashed wood with white marble and brass",
+                locationInWarehouse: "",
+                additionalDetails: "Designer piece, sold as matching pair",
+                inventoryId: ""
+            }
+        ];
+
+        const categories = ['All', 'Storage', 'Seating', 'Tables'];
+        let currentCategory = 'All';
+        let currentZoom = 1;
+        let newImageData = null;
+
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            modal.classList.add('active');
+            currentZoom = 1;
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'imageModal' || event.target.className === 'modal-close') {
+                const modal = document.getElementById('imageModal');
+                modal.classList.remove('active');
+            }
+        }
+
+        function zoomIn() {
+            const modalImage = document.getElementById('modalImage');
+            currentZoom = Math.min(currentZoom + 0.25, 3);
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function zoomOut() {
+            const modalImage = document.getElementById('modalImage');
+            currentZoom = Math.max(currentZoom - 0.25, 0.5);
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            const modalImage = document.getElementById('modalImage');
+            currentZoom = 1;
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function setDecision(itemId, decision) {
+            if (!currentUser) {
+                alert('Please enter your name before making decisions.');
+                return;
+            }
+            
+            decisions[itemId] = {
+                decision: decision,
+                decidedBy: currentUser,
+                timestamp: new Date().toISOString()
+            };
+            renderGallery();
+            renderResultsTable();
+        }
+
+        function toggleEditMode(itemId) {
+            const descriptionField = document.getElementById(`notes-${itemId}`);
+            const priorField = document.getElementById(`prior-${itemId}`);
+            const dimensionsField = document.getElementById(`dimensions-${itemId}`);
+            const finishField = document.getElementById(`finish-${itemId}`);
+            const warehouseField = document.getElementById(`warehouse-${itemId}`);
+            const additionalField = document.getElementById(`additional-${itemId}`);
+            const editBtn = document.getElementById(`edit-btn-${itemId}`);
+            const saveBtn = document.getElementById(`save-btn-${itemId}`);
+            
+            const isEditing = descriptionField.hasAttribute('readonly');
+            
+            if (isEditing) {
+                descriptionField.removeAttribute('readonly');
+                priorField.removeAttribute('readonly');
+                dimensionsField.removeAttribute('readonly');
+                finishField.removeAttribute('readonly');
+                warehouseField.removeAttribute('readonly');
+                additionalField.removeAttribute('readonly');
+                
+                descriptionField.style.background = 'var(--color-bg-base)';
+                priorField.style.background = 'var(--color-bg-base)';
+                dimensionsField.style.background = 'var(--color-bg-base)';
+                finishField.style.background = 'var(--color-bg-base)';
+                warehouseField.style.background = 'var(--color-bg-base)';
+                additionalField.style.background = 'var(--color-bg-base)';
+                
+                editBtn.textContent = '✕ Cancel';
+                saveBtn.style.display = 'block';
+            } else {
+                descriptionField.setAttribute('readonly', 'true');
+                priorField.setAttribute('readonly', 'true');
+                dimensionsField.setAttribute('readonly', 'true');
+                finishField.setAttribute('readonly', 'true');
+                warehouseField.setAttribute('readonly', 'true');
+                additionalField.setAttribute('readonly', 'true');
+                
+                descriptionField.style.background = 'var(--color-bg-surface)';
+                priorField.style.background = 'var(--color-bg-surface)';
+                dimensionsField.style.background = 'var(--color-bg-surface)';
+                finishField.style.background = 'var(--color-bg-surface)';
+                warehouseField.style.background = 'var(--color-bg-surface)';
+                additionalField.style.background = 'var(--color-bg-surface)';
+                
+                editBtn.textContent = '✏️ Make Edits';
+                saveBtn.style.display = 'none';
+                
+                renderGallery();
+            }
+        }
+
+        function saveChanges(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (!item) return;
+            
+            item.description = document.getElementById(`notes-${itemId}`).value;
+            item.priorInstallLocation = document.getElementById(`prior-${itemId}`).value;
+            item.dimensions = document.getElementById(`dimensions-${itemId}`).value;
+            item.finish = document.getElementById(`finish-${itemId}`).value;
+            item.locationInWarehouse = document.getElementById(`warehouse-${itemId}`).value;
+            item.additionalDetails = document.getElementById(`additional-${itemId}`).value;
+            
+            toggleEditMode(itemId);
+            alert('Changes saved successfully!');
+        }
+
+        function renderResultsTable() {
+            let tableContainer = document.getElementById('resultsTable');
+            if (!tableContainer) {
+                tableContainer = document.createElement('div');
+                tableContainer.id = 'resultsTable';
+                tableContainer.className = 'results-table';
+                document.querySelector('.container').appendChild(tableContainer);
+            }
+
+            const decidedItems = items.filter(item => decisions[item.id]);
+            
+            if (decidedItems.length === 0) {
+                tableContainer.innerHTML = '';
+                return;
+            }
+
+            let tableHTML = `
+                <h2 style="color: var(--color-text-accent); margin-bottom: 1rem;">Decision Summary</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            decidedItems.forEach(item => {
+                const decisionData = decisions[item.id];
+                const decision = decisionData.decision;
+                const badgeClass = decision === 'Store It' ? 'decision-store' : 
+                                  decision === 'Donate or Throw It' ? 'decision-donate' : 
+                                  'decision-consign';
+                tableHTML += `
+                    <tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.category}</td>
+                        <td>
+                            <span class="decision-badge ${badgeClass}">${decision}</span>
+                            <div class="decision-by">By: ${decisionData.decidedBy}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        function renderTabs() {
+            const tabsContainer = document.getElementById('tabs');
+            tabsContainer.innerHTML = '';
+            
+            categories.forEach(category => {
+                const tab = document.createElement('button');
+                tab.className = 'tab' + (category === currentCategory ? ' active' : '');
+                tab.textContent = category;
+                tab.onclick = () => filterByCategory(category);
+                tabsContainer.appendChild(tab);
+            });
+
+            const addTab = document.createElement('button');
+            addTab.className = 'tab' + (currentCategory === 'Add New' ? ' active' : '');
+            addTab.textContent = '➕ Add New';
+            addTab.onclick = () => filterByCategory('Add New');
+            tabsContainer.appendChild(addTab);
+        }
+
+        document.getElementById('newImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    newImageData = event.target.result;
+                    document.getElementById('previewImg').src = newImageData;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function saveNewItem() {
+            const title = document.getElementById('newTitle').value.trim();
+            const category = document.getElementById('newCategory').value;
+            const era = document.getElementById('newEra').value;
+            const description = document.getElementById('newDescription').value.trim();
+
+            if (!title || !category || !era || !description || !newImageData) {
+                alert('Please fill in all required fields (marked with *)');
+                return;
+            }
+
+            const newId = Math.max(...items.map(i => i.id), 0) + 1;
+
+            const newItem = {
+                id: newId,
+                title: title,
+                category: category,
+                era: era,
+                description: description,
+                image: newImageData,
+                priorInstallLocation: document.getElementById('newPriorLocation').value.trim(),
+                dimensions: document.getElementById('newDimensions').value.trim(),
+                finish: document.getElementById('newFinish').value.trim(),
+                locationInWarehouse: document.getElementById('newWarehouseLocation').value.trim(),
+                additionalDetails: document.getElementById('newAdditionalDetails').value.trim(),
+                inventoryId: document.getElementById('newInventoryId').value.trim()
+            };
+
+            items.push(newItem);
+
+            if (!categories.includes(category)) {
+                categories.splice(categories.length - 1, 0, category);
+            }
+
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newCategory').value = '';
+            document.getElementById('newEra').value = '';
+            document.getElementById('newDescription').value = '';
+            document.getElementById('newPriorLocation').value = '';
+            document.getElementById('newDimensions').value = '';
+            document.getElementById('newFinish').value = '';
+            document.getElementById('newWarehouseLocation').value = '';
+            document.getElementById('newAdditionalDetails').value = '';
+            document.getElementById('newInventoryId').value = '';
+            document.getElementById('newImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            newImageData = null;
+
+            alert('Item added successfully!');
+            filterByCategory('All');
+        }
+
+        function cancelAddItem() {
+            document.getElementById('newTitle').value = '';
+            document.getElementById('newCategory').value = '';
+            document.getElementById('newEra').value = '';
+            document.getElementById('newDescription').value = '';
+            document.getElementById('newPriorLocation').value = '';
+            document.getElementById('newDimensions').value = '';
+            document.getElementById('newFinish').value = '';
+            document.getElementById('newWarehouseLocation').value = '';
+            document.getElementById('newAdditionalDetails').value = '';
+            document.getElementById('newInventoryId').value = '';
+            document.getElementById('newImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            newImageData = null;
+            filterByCategory('All');
+        }
+
+        function filterByCategory(category) {
+            currentCategory = category;
+            renderTabs();
+            
+            if (category === 'Add New') {
+                document.getElementById('gallery').style.display = 'none';
+                document.getElementById('addItemForm').style.display = 'block';
+            } else {
+                document.getElementById('gallery').style.display = 'grid';
+                document.getElementById('addItemForm').style.display = 'none';
+                renderGallery();
+            }
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            const filteredItems = currentCategory === 'All' 
+                ? items 
+                : items.filter(item => item.category === currentCategory);
+
+            if (filteredItems.length === 0) {
+                gallery.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--color-text-secondary); padding: 3rem;">No items yet. Import a CSV file to get started!</p>';
+                return;
+            }
+
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                const decisionData = decisions[item.id];
+                const currentDecision = decisionData ? decisionData.decision : null;
+                const decidedBy = decisionData ? decisionData.decidedBy : null;
+                
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="card-image" onclick="openImageModal('${item.image}')">
+                    <div class="card-content">
+                        <span class="category-badge">${item.category} • ${item.era}</span>
+                        <h2 class="card-title">${item.title}</h2>
+                        ${decidedBy ? `<div class="decision-by">Last decided by: ${decidedBy}</div>` : ''}
+                        <div class="action-buttons">
+                            <button class="action-btn ${currentDecision === 'Store It' ? 'selected' : ''}" 
+                                    onclick="setDecision(${item.id}, 'Store It')">
+                                Store It
+                            </button>
+                            <button class="action-btn ${currentDecision === 'Donate or Throw It' ? 'selected' : ''}" 
+                                    onclick="setDecision(${item.id}, 'Donate or Throw It')">
+                                Donate or Throw It
+                            </button>
+                            <button class="action-btn ${currentDecision === 'Consign It' ? 'selected' : ''}" 
+                                    onclick="setDecision(${item.id}, 'Consign It')">
+                                Consign It
+                            </button>
+                        </div>
+                        <div class="description-header">
+                            <span class="description-label">Description</span>
+                            <button class="edit-btn" id="edit-btn-${item.id}" onclick="toggleEditMode(${item.id})">✏️ Make Edits</button>
+                        </div>
+                        <textarea class="text-field" placeholder="Add your notes here..." id="notes-${item.id}" readonly style="background: var(--color-bg-surface);">${item.description}</textarea>
+                        <div style="margin-top: 1rem;">
+                            <div class="field-row">
+                                <strong style="color: var(--color-text-secondary); font-size: 0.9rem;">Prior Install Location:</strong>
+                                <input type="text" class="editable-field" id="prior-${item.id}" value="${item.priorInstallLocation || ''}" placeholder="Not specified" readonly style="background: var(--color-bg-surface);">
+                            </div>
+                            <div class="field-row">
+                                <strong style="color: var(--color-text-secondary); font-size: 0.9rem;">Dimensions:</strong>
+                                <input type="text" class="editable-field" id="dimensions-${item.id}" value="${item.dimensions || ''}" placeholder="Not specified" readonly style="background: var(--color-bg-surface);">
+                            </div>
+                            <div class="field-row">
+                                <strong style="color: var(--color-text-secondary); font-size: 0.9rem;">Finish:</strong>
+                                <input type="text" class="editable-field" id="finish-${item.id}" value="${item.finish || ''}" placeholder="Not specified" readonly style="background: var(--color-bg-surface);">
+                            </div>
+                            <div class="field-row">
+                                <strong style="color: var(--color-text-secondary); font-size: 0.9rem;">Location in Warehouse:</strong>
+                                <input type="text" class="editable-field" id="warehouse-${item.id}" value="${item.locationInWarehouse || ''}" placeholder="Not specified" readonly style="background: var(--color-bg-surface);">
+                            </div>
+                            <div class="field-row">
+                                <strong style="color: var(--color-text-secondary); font-size: 0.9rem;">Additional Details:</strong>
+                                <input type="text" class="editable-field" id="additional-${item.id}" value="${item.additionalDetails || ''}" placeholder="Not specified" readonly style="background: var(--color-bg-surface);">
+                            </div>
+                            <div class="field-row" style="margin-bottom: 0;">
+                                <strong style="color: var(--color-text-secondary); font-size: 0.9rem;">Inventory ID:</strong>
+                                <div style="padding: 0.5rem 0; color: var(--color-text-primary); font-size: 0.9rem;">${item.inventoryId || 'Not specified'}</div>
+                            </div>
+                            <button class="save-changes-btn" id="save-btn-${item.id}" onclick="saveChanges(${item.id})" style="display: none;">💾 Save Changes</button>
+                        </div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        renderTabs();
+        renderGallery();
+    </script>
+</body>
+</html>
